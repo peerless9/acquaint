@@ -24,14 +24,17 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#FAF8FF"
+        }
+      ],
       "expo-image"
     ],
-    "scheme": "acquaint",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FAF8FF"
-    }
+    "scheme": "acquaint"
   }
 }
