@@ -3,5 +3,13 @@
   "compilerOptions": {
     "strict": true
   },
-  "exclude": ["node_modules", "dist", "babel.config.js", "metro.config.js", "android", "ios"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "babel.config.js",
+    "metro.config.js",
+    "android",
+    "ios",
+    "scripts"
+  ]
 }
