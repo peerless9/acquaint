@@ -4,7 +4,6 @@ import { Redirect, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import * as Calendar from 'expo-calendar/legacy';
 import { CalendarDays, Check, ChevronLeft, Coffee, MapPin } from 'lucide-react-native';
 
 import { DetailRow } from '../components/DetailRow';
@@ -13,6 +12,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { Wordmark } from '../components/Wordmark';
 import { formatWhen, getDateTimes, getMatch } from '../data/matches';
 import { useAppState } from '../data/store';
+import { addToCalendar } from '../utils/addToCalendar';
 import { colors, fonts, radii, sizes } from '../theme';
 
 const ICON = { size: 20, color: colors.chipText, strokeWidth: 1.75 };
@@ -27,7 +27,7 @@ export default function DateScreen() {
 
   const backToPicks = () => (router.canGoBack() ? router.back() : router.replace('/picks'));
 
-  const addToCalendar = async () => {
+  const onAddToCalendar = async () => {
     if (busy) return;
     if (calendarAdded) {
       setCalendarAdded(false);
@@ -35,15 +35,14 @@ export default function DateScreen() {
     }
     setBusy(true);
     try {
-      // System "New Event" sheet: works in Expo Go and needs no calendar permission.
-      const result = await Calendar.createEventInCalendarAsync({
+      const saved = await addToCalendar({
         title: 'Date via acquaint',
-        startDate: times.start,
-        endDate: times.end,
+        start: times.start,
+        end: times.end,
         location: `${match.date.venue}, ${match.date.address}`,
         notes: match.date.plan,
       });
-      if (result.action === 'saved' || result.action === 'done') setCalendarAdded(true);
+      if (saved) setCalendarAdded(true);
     } catch {
       Alert.alert('Calendar unavailable', "We couldn't open your calendar on this device.");
     } finally {
@@ -95,7 +94,7 @@ export default function DateScreen() {
           label={calendarAdded ? 'Added to calendar' : 'Add to calendar'}
           variant={calendarAdded ? 'outline' : 'solid'}
           icon={calendarAdded ? <Check size={18} color={colors.accent} strokeWidth={2.5} /> : undefined}
-          onPress={addToCalendar}
+          onPress={onAddToCalendar}
           accessibilityHint={calendarAdded ? 'Marks the date as not added' : 'Opens your calendar to save the date'}
         />
         <Pressable
