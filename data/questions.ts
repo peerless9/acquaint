@@ -2,7 +2,7 @@
 // Edit freely: each question renders based on its `kind`.
 // `importance: true` asks "How important is this?" after the answer; skip it for answers in `importanceSkip`.
 
-import { AREAS, BUDGETS, DATE_TYPES, NEEDS, SLOTS } from './places';
+import { AREAS, BUDGETS, DATE_TYPES, NEEDS, SLOTS, TRAVEL_OPTIONS } from './places';
 
 export type Section = 'Preferences' | 'Compatibility' | 'Non-negotiables' | 'Dates';
 
@@ -24,8 +24,22 @@ export type SingleQuestion = Base & { kind: 'single'; options: string[]; allowOt
 /** `exclusive` is an option like "None of these" that clears the others when picked. */
 export type MultiQuestion = Base & { kind: 'multi'; options: string[]; hint?: string; exclusive?: string };
 export type ScaleQuestion = Base & { kind: 'scale'; minLabel: string; maxLabel: string };
+/** Pick a neighborhood, or fill it in from the device's location. */
+export type LocationQuestion = Base & { kind: 'location'; options: string[]; hint?: string };
+/** Several short sub-questions on one screen; each item's answer is stored under its own id. */
+export type GroupQuestion = Base & {
+  kind: 'group';
+  hint?: string;
+  items: { id: string; label: string; options: string[] }[];
+};
 
-export type Question = TextQuestion | SingleQuestion | MultiQuestion | ScaleQuestion;
+export type Question = TextQuestion | SingleQuestion | MultiQuestion | ScaleQuestion | LocationQuestion | GroupQuestion;
+
+// Common deal-breakers, checked both ways: your list against matches, and theirs against you.
+export const DEAL_BREAKERS = [
+  'Smokes', 'Drinks heavily', 'Uses drugs', 'Has kids', 'Wants kids', "Doesn't want kids", 'Lives far away', 'Has pets',
+] as const;
+export type DealBreaker = (typeof DEAL_BREAKERS)[number];
 
 export const OTHER = 'Other';
 
@@ -61,6 +75,14 @@ export const questions: Question[] = [
   { id: 'age', section: 'Preferences', kind: 'text', prompt: 'What is your age?', keyboard: 'number-pad', placeholder: 'e.g. 27' },
   { id: 'ageRange', section: 'Preferences', kind: 'text', importance: true, prompt: 'What age range are you looking to meet?', placeholder: 'e.g. 24–32' },
   { id: 'height', section: 'Preferences', kind: 'text', prompt: 'What is your height?', placeholder: "e.g. 5'9" },
+  {
+    id: 'area',
+    section: 'Preferences',
+    kind: 'location',
+    prompt: 'Where are you based?',
+    hint: 'acquaint is in San Francisco for now. We use this to find matches and venues near you.',
+    options: [...AREAS],
+  },
   { id: 'idealHeight', section: 'Preferences', kind: 'multi', importance: true, prompt: 'What is your ideal height in a partner?', hint: 'Check all that apply', options: heights },
   { id: 'career', section: 'Preferences', kind: 'single', prompt: 'What career stage are you in?', options: careerStages, allowOther: true },
   {
@@ -88,21 +110,39 @@ export const questions: Question[] = [
 
   // Non-negotiables: hard filters, never traded off against other answers
   {
+    id: 'aboutYou',
+    section: 'Non-negotiables',
+    kind: 'group',
+    prompt: 'First, a few things about you.',
+    hint: 'Your matches have deal-breakers too, so we check both ways.',
+    items: [
+      { id: 'smoking', label: 'Do you smoke?', options: ['Yes', 'Sometimes', 'No'] },
+      { id: 'drinking', label: 'How often do you drink?', options: ['Never', 'Socially', 'Often'] },
+      { id: 'drugs', label: 'Do you use recreational drugs?', options: ['Never', 'Sometimes', 'Often'] },
+      { id: 'hasKids', label: 'Do you have kids?', options: ['Yes', 'No'] },
+      { id: 'wantsKids', label: 'Do you want kids someday?', options: ['Yes', 'No', 'Not sure'] },
+      { id: 'pets', label: 'Do you have pets?', options: ['Yes', 'No'] },
+    ],
+  },
+  {
     id: 'dealBreakers',
     section: 'Non-negotiables',
     kind: 'multi',
     prompt: 'Which of these are deal-breakers for you?',
-    hint: "We'll never match you with someone who has these",
-    options: [
-      'Smokes', 'Drinks heavily', 'Uses drugs', 'Has kids', 'Wants kids', "Doesn't want kids",
-      'Lives far away', 'Has pets', 'None of these',
-    ],
+    hint: "We'll never match you with these. \"Lives far away\" means beyond the travel time you set later.",
+    options: [...DEAL_BREAKERS, 'None of these'],
     exclusive: 'None of these',
   },
   { id: 'nonNegotiables', section: 'Non-negotiables', kind: 'text', multiline: true, prompt: 'Are there any non-negotiables you wish to identify?', placeholder: 'Anything else we should never match you with. Write "none" if not.' },
 
   // Dates: what the planner needs to book a first date you'll both enjoy
-  { id: 'area', section: 'Dates', kind: 'single', prompt: 'Which part of San Francisco are you in?', options: [...AREAS] },
+  {
+    id: 'travel',
+    section: 'Dates',
+    kind: 'single',
+    prompt: 'How long are you willing to travel for a date?',
+    options: TRAVEL_OPTIONS.map((t) => t.label),
+  },
   { id: 'dateTypes', section: 'Dates', kind: 'multi', prompt: 'What kinds of dates do you enjoy?', hint: 'Check all that apply', options: [...DATE_TYPES] },
   {
     id: 'availability',
