@@ -31,10 +31,10 @@ npx expo-doctor     # dependency / config checks
 ## Flow
 
 1. **Sign up** (`/signup`, the first screen): email or phone number plus a password (at least 8 characters). There's no backend: only the email or phone is kept in memory, and the password is discarded.
-2. **Quiz** (`/quiz`): 26 questions in four sections.
-   - *Preferences* and *Compatibility*: the Acquaint Compatibility Test form.
-   - *Non-negotiables*: a deal-breaker checklist plus the form's free-text question.
-   - *Dates*: your area, the kinds of dates you like, when you're free, your budget, and dietary or access needs.
+2. **Quiz** (`/quiz`): 28 questions in four sections.
+   - *Preferences* and *Compatibility*: the Acquaint Compatibility Test form, plus "Where are you based?". You can tap "Use my current location" to pick the nearest neighborhood or choose one yourself. Outside San Francisco, it asks you to pick the area you'd date in.
+   - *Non-negotiables*: a few facts about you (smoking, drinking, drugs, kids, wanting kids, pets), a deal-breaker checklist, and the form's free-text question.
+   - *Dates*: how long you'll travel for a date, the kinds of dates you like, when you're free, your budget, and dietary or access needs.
 
    Questions about what you want in a partner then ask "How important is this to you?" (Not very / Somewhat / Very). Next stays disabled until the answer, and its importance, are filled in.
 3. **Picks** (`/picks`): your top 3 matches, shown as photos only. If nobody passes your non-negotiables, you get an empty state with a way back to your answers.
@@ -47,13 +47,15 @@ npx expo-doctor     # dependency / config checks
 
 1. **Filters (hard):**
    - Who you're looking to meet, checked both ways.
-   - Every deal-breaker (smoking, kids, pets, living far away, and so on).
+   - Deal-breakers, also checked both ways: your list against each candidate, and each candidate's list against your "about you" answers. Facts you haven't given never count against you.
    - At least one shared free time.
+   - At least one venue that both people can reach within their travel limits. "Lives far away" means their home is beyond your travel limit, and the same rule applies from their side.
 2. **Score (0–100):** each answer is compared with the candidate (age range, height, career, income, traits, going out vs staying in, family vs friends, date types, budget, distance). Each comparison is weighted by the importance you gave it (Not very ×0.5, Somewhat ×1.5, Very ×4). The top 3 scores are this week's matches, and the strongest matching answers become the "reasons" chips.
 3. **Plan:**
    - **Time:** the soonest time you're both free, at least 36 hours out.
    - **Activity:** something you both like that suits that time of day.
-   - **Venue:** one that fits both budgets and every dietary or access need, with the least combined travel. Venues are in `data/places.ts`.
+   - **Venue:** one that both people can reach within their travel limits, fits both budgets and every dietary or access need, and has the least combined travel. Venues are in `data/places.ts`.
+   - **Travel time:** estimated from real neighborhood coordinates (about 8 minutes plus 3.5 minutes per mile) and shown on the Date screen.
 
 ## Project structure
 
@@ -81,6 +83,8 @@ Each entry in `data/questions.ts` has a `kind`:
 | `single` | radio cards                                  | `options`, `allowOther`                     |
 | `multi`  | checkbox cards (a chip grid above 8 options) | `options`, `hint`, `exclusive` ("None of these") |
 | `scale`  | 1–5 pills                                    | `minLabel`, `maxLabel`                      |
+| `location` | "Use my current location" + neighborhood cards | `options`, `hint`                       |
+| `group`  | several short segmented rows on one screen    | `items` (each saved under its own id)       |
 
 Any question can add `importance: true` to ask how much it matters. Use `importanceSkip` to skip that for answers like "No Preference". If you change an option label that matching reads (deal-breakers, areas, time slots, date types), update `data/matching.ts` or `data/places.ts` to match.
 
