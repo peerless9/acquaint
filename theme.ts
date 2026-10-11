@@ -15,6 +15,7 @@ export const colors = {
   disabled: '#E4DDF7',
   disabledText: '#5B4A8C',
   white: '#FFFFFF',
+  error: '#B42318',
   photoTints: ['#D9CCFA', '#C9B8F5', '#E6DCFB'] as const,
 };
 
