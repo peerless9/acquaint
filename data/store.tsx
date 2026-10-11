@@ -72,13 +72,16 @@ export function useAppState() {
   return ctx;
 }
 
-export function isAnswered(q: Question, answer: Answer | undefined, other = '') {
-  if (answer === undefined) return false;
+export function isAnswered(q: Question, answers: Record<string, Answer>, otherText: Record<string, string>) {
+  const answer = answers[q.id];
   switch (q.kind) {
+    case 'group':
+      return q.items.every((item) => typeof answers[item.id] === 'string');
     case 'text':
       return typeof answer === 'string' && answer.trim().length > 0;
     case 'single':
-      return answer !== OTHER || other.trim().length > 0;
+    case 'location':
+      return typeof answer === 'string' && (answer !== OTHER || (otherText[q.id] ?? '').trim().length > 0);
     case 'multi':
       return Array.isArray(answer) && answer.length > 0;
     case 'scale':
