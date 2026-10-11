@@ -19,7 +19,13 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "bundler": "metro",
+      "name": "acquaint",
+      "shortName": "acquaint",
+      "backgroundColor": "#FAF8FF",
+      "themeColor": "#5A2FD6"
     },
     "plugins": [
       "expo-router",
@@ -35,6 +41,9 @@
       ],
       "expo-image"
     ],
-    "scheme": "acquaint"
+    "scheme": "acquaint",
+    "experiments": {
+      "baseUrl": "/acquaint"
+    }
   }
 }
