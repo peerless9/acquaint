@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -37,6 +37,15 @@ export default function QuizScreen() {
   const answered = isAnswered(q, answer, other);
   const asksImportance = answered && needsImportance(q, answer);
   const complete = answered && (!asksImportance || importance[q.id] !== undefined);
+
+  // The importance picker appears below the answer, often off-screen: bring it into view.
+  const scrollRef = useRef<ScrollView>(null);
+  const needsRating = asksImportance && importance[q.id] === undefined;
+  useEffect(() => {
+    if (!needsRating) return;
+    const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
+    return () => clearTimeout(t);
+  }, [needsRating]);
   const isLast = index === questions.length - 1;
 
   const next = () => {
@@ -59,6 +68,7 @@ export default function QuizScreen() {
         </View>
 
         <ScrollView
+          ref={scrollRef}
           style={styles.flex}
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
