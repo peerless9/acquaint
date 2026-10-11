@@ -9,6 +9,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { Segmented } from '../components/Segmented';
 import { TextAnswer } from '../components/TextAnswer';
 import { Wordmark } from '../components/Wordmark';
+import { isFormConnected } from '../data/formSubmit';
 import { useAppState, type Account } from '../data/store';
 import { colors, fonts, sizes } from '../theme';
 
@@ -145,7 +146,11 @@ export default function SignupScreen() {
 
         <View style={styles.footer}>
           <PrimaryButton label="Create account" disabled={!canSubmit} onPress={submit} />
-          <Text style={styles.note}>Prototype: your details stay on this device.</Text>
+          <Text style={styles.note}>
+            {isFormConnected()
+              ? 'Prototype: your email or phone and quiz answers are sent to the acquaint team. Your password never leaves this device.'
+              : 'Prototype: your details stay on this device.'}
+          </Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -167,5 +172,5 @@ const styles = StyleSheet.create({
   hintOk: { color: colors.chipText },
   eye: { marginRight: 6 },
   footer: { alignItems: 'center', gap: 12, paddingHorizontal: sizes.gutter, paddingTop: 16, paddingBottom: 12 },
-  note: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
+  note: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18, color: colors.muted, textAlign: 'center' },
 });
