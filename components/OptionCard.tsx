@@ -7,6 +7,8 @@ import { colors, fonts, radii, timing } from '../theme';
 
 type Props = {
   label: string;
+  /** Optional muted second line under the label. */
+  detail?: string;
   selected: boolean;
   onPress: () => void;
   /** radio = single choice, checkbox = multi choice, none = compact chip */
@@ -14,7 +16,7 @@ type Props = {
   compact?: boolean;
 };
 
-export function OptionCard({ label, selected, onPress, indicator = 'radio', compact = false }: Props) {
+export function OptionCard({ label, detail, selected, onPress, indicator = 'radio', compact = false }: Props) {
   const on = useSharedValue(selected ? 1 : 0);
 
   useEffect(() => {
@@ -29,13 +31,20 @@ export function OptionCard({ label, selected, onPress, indicator = 'radio', comp
       onPress={onPress}
       accessibilityRole={indicator === 'radio' ? 'radio' : 'checkbox'}
       accessibilityState={indicator === 'radio' ? { selected } : { checked: selected }}
-      accessibilityLabel={label}
+      accessibilityLabel={detail ? `${label}, ${detail}` : label}
       style={({ pressed }) => [styles.card, compact && styles.compact, pressed && !selected && styles.pressed]}
     >
       {/* Selected fill + 2px ring fade in over the resting 1px border, so nothing shifts. */}
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.ring, ring]} />
 
-      <Text style={[styles.label, compact && styles.labelCompact]}>{label}</Text>
+      {detail ? (
+        <View style={styles.labelBlock}>
+          <Text style={styles.label}>{label}</Text>
+          <Text style={styles.detail}>{detail}</Text>
+        </View>
+      ) : (
+        <Text style={[styles.label, compact && styles.labelCompact]}>{label}</Text>
+      )}
 
       {indicator === 'radio' && (
         <View style={styles.radio}>
@@ -79,6 +88,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.selectedFill,
   },
   label: { flexShrink: 1, fontFamily: fonts.medium, fontSize: 16, lineHeight: 22, color: colors.text },
+  labelBlock: { flexShrink: 1, gap: 2 },
+  detail: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18, color: colors.muted },
   labelCompact: { fontSize: 15, textAlign: 'center' },
   radio: {
     width: 22,
