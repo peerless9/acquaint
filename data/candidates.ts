@@ -1,4 +1,5 @@
 import type { Area, DateType, Need, SlotLabel } from './places';
+import type { DealBreaker } from './questions';
 
 export type Gender = 'Male' | 'Female';
 
@@ -29,6 +30,10 @@ export type Candidate = {
   dateTypes: DateType[];
   budget: 1 | 2 | 3;
   needs: Need[];
+  /** Their non-negotiables, checked against what you tell us about yourself. */
+  dealBreakers: DealBreaker[];
+  /** How long they'll travel for a date, in minutes. */
+  maxTravelMin: number;
 };
 
 const photo = (img: number) => `https://i.pravatar.cc/800?img=${img}`;
@@ -40,6 +45,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: true, hasPets: true,
     area: 'Noe Valley', availability: ['Weekday evenings', 'Weekend evenings', 'Weekend afternoons'],
     dateTypes: ['Drinks', 'A meal out', 'Live music or a show'], budget: 2, needs: [],
+    dealBreakers: ['Smokes'], maxTravelMin: 30,
   },
   {
     id: 'c2', photo: photo(12), gender: 'Male', seeks: ['Female'], age: 29, heightIn: 71, career: 'Employed', monthlyIncome: 5400,
@@ -47,6 +53,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: null, hasPets: false,
     area: 'Mission', availability: ['Weekend mornings', 'Weekend afternoons', 'Weekday evenings'],
     dateTypes: ['Coffee', 'A walk outdoors', 'Something active'], budget: 1, needs: ['Vegetarian'],
+    dealBreakers: ['Uses drugs'], maxTravelMin: 20,
   },
   {
     id: 'c3', photo: photo(32), gender: 'Female', seeks: ['Male', 'Female'], age: 25, heightIn: 64, career: 'Student', monthlyIncome: 1800,
@@ -54,6 +61,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: true, hasPets: true,
     area: 'Sunset', availability: ['Weekday lunch', 'Weekend mornings', 'Weekend afternoons'],
     dateTypes: ['Coffee', 'Museum or gallery', 'A walk outdoors'], budget: 1, needs: ['Vegan'],
+    dealBreakers: ['Smokes', 'Drinks heavily'], maxTravelMin: 30,
   },
   {
     id: 'c4', photo: photo(13), gender: 'Male', seeks: ['Female', 'Male'], age: 33, heightIn: 74, career: 'Employed', monthlyIncome: 9000,
@@ -61,6 +69,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: true, usesDrugs: false, hasKids: false, wantsKids: true, hasPets: false,
     area: 'SoMa', availability: ['Weekday evenings', 'Weekend evenings'],
     dateTypes: ['Drinks', 'A meal out'], budget: 3, needs: [],
+    dealBreakers: ['Has kids'], maxTravelMin: Infinity,
   },
   {
     id: 'c5', photo: photo(26), gender: 'Female', seeks: ['Male'], age: 31, heightIn: 68, career: 'Employed', monthlyIncome: 7400,
@@ -68,6 +77,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: false, hasPets: true,
     area: 'Marina', availability: ['Weekday mornings', 'Weekend mornings', 'Weekend afternoons'],
     dateTypes: ['Something active', 'A walk outdoors', 'Coffee'], budget: 2, needs: ['Gluten-free'],
+    dealBreakers: ['Wants kids', 'Has kids'], maxTravelMin: 20,
   },
   {
     id: 'c6', photo: photo(51), gender: 'Male', seeks: ['Female'], age: 35, heightIn: 70, career: 'Employed', monthlyIncome: 6800,
@@ -75,6 +85,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: true, wantsKids: true, hasPets: false,
     area: 'Richmond', availability: ['Weekend afternoons', 'Weekend evenings', 'Weekday lunch'],
     dateTypes: ['A meal out', 'Museum or gallery', 'Live music or a show'], budget: 2, needs: [],
+    dealBreakers: ["Doesn't want kids", 'Smokes'], maxTravelMin: 30,
   },
   {
     id: 'c7', photo: photo(44), gender: 'Female', seeks: ['Male', 'Female'], age: 28, heightIn: 63, career: 'Employed', monthlyIncome: 4800,
@@ -82,6 +93,7 @@ export const candidates: Candidate[] = [
     smokes: true, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: null, hasPets: false,
     area: 'Mission', availability: ['Weekday evenings', 'Weekend evenings'],
     dateTypes: ['Live music or a show', 'Drinks', 'A meal out'], budget: 2, needs: [],
+    dealBreakers: [], maxTravelMin: 30,
   },
   {
     id: 'c8', photo: photo(53), gender: 'Male', seeks: ['Female'], age: 26, heightIn: 69, career: 'Student', monthlyIncome: 1500,
@@ -89,6 +101,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: true, hasPets: true,
     area: 'Sunset', availability: ['Weekday lunch', 'Weekend mornings', 'Weekend afternoons'],
     dateTypes: ['Coffee', 'Museum or gallery', 'A walk outdoors'], budget: 1, needs: ['Vegetarian'],
+    dealBreakers: ['Smokes'], maxTravelMin: 20,
   },
   {
     id: 'c9', photo: photo(36), gender: 'Female', seeks: ['Male'], age: 30, heightIn: 67, career: 'Employed', monthlyIncome: 8200,
@@ -96,6 +109,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: true, hasPets: false,
     area: 'SoMa', availability: ['Weekday evenings', 'Weekend afternoons', 'Weekend evenings'],
     dateTypes: ['A meal out', 'Drinks', 'Museum or gallery'], budget: 3, needs: ['Step-free access'],
+    dealBreakers: ['Smokes', 'Uses drugs', "Doesn't want kids"], maxTravelMin: 30,
   },
   {
     id: 'c10', photo: photo(59), gender: 'Male', seeks: ['Female', 'Male'], age: 31, heightIn: 72, career: 'Employed', monthlyIncome: 5900,
@@ -103,6 +117,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: true, hasPets: true,
     area: 'Noe Valley', availability: ['Weekday evenings', 'Weekend mornings', 'Weekend evenings'],
     dateTypes: ['Coffee', 'A meal out', 'Live music or a show'], budget: 2, needs: [],
+    dealBreakers: ['Smokes'], maxTravelMin: Infinity,
   },
   {
     id: 'c11', photo: photo(27), gender: 'Female', seeks: ['Male', 'Female'], age: 24, heightIn: 65, career: 'Student', monthlyIncome: 1200,
@@ -110,6 +125,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: true, usesDrugs: true, hasKids: false, wantsKids: false, hasPets: false,
     area: 'SoMa', availability: ['Weekday evenings', 'Weekend evenings'],
     dateTypes: ['Drinks', 'Live music or a show', 'Something active'], budget: 1, needs: [],
+    dealBreakers: [], maxTravelMin: 20,
   },
   {
     id: 'c12', photo: photo(60), gender: 'Male', seeks: ['Female'], age: 28, heightIn: 68, career: 'Employed', monthlyIncome: 4300,
@@ -117,6 +133,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: true, hasPets: true,
     area: 'Marina', availability: ['Weekday mornings', 'Weekend mornings', 'Weekend afternoons'],
     dateTypes: ['A walk outdoors', 'Something active', 'Coffee'], budget: 1, needs: ['Gluten-free'],
+    dealBreakers: ['Smokes', 'Drinks heavily'], maxTravelMin: 15,
   },
   {
     id: 'c13', photo: photo(16), gender: 'Female', seeks: ['Male'], age: 34, heightIn: 66, career: 'Employed', monthlyIncome: 7000,
@@ -124,6 +141,7 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: true, wantsKids: null, hasPets: true,
     area: 'Richmond', availability: ['Weekday lunch', 'Weekend mornings', 'Weekend afternoons'],
     dateTypes: ['Coffee', 'A meal out', 'A walk outdoors'], budget: 2, needs: ['Alcohol-free'],
+    dealBreakers: ['Smokes', 'Drinks heavily', 'Uses drugs'], maxTravelMin: 30,
   },
   {
     id: 'c14', photo: photo(68), gender: 'Male', seeks: ['Female', 'Male'], age: 30, heightIn: 73, career: 'Employed', monthlyIncome: 7600,
@@ -131,5 +149,6 @@ export const candidates: Candidate[] = [
     smokes: false, drinksHeavily: false, usesDrugs: false, hasKids: false, wantsKids: true, hasPets: false,
     area: 'Mission', availability: ['Weekday evenings', 'Weekend afternoons', 'Weekend evenings'],
     dateTypes: ['Museum or gallery', 'Drinks', 'Live music or a show'], budget: 2, needs: [],
+    dealBreakers: ['Has kids'], maxTravelMin: 20,
   },
 ];
