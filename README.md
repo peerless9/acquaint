@@ -2,6 +2,8 @@
 
 A dating app with no swiping and no chat. You take a compatibility quiz, get three matches each week (photos only), pick one, and acquaint plans the date.
 
+**Try it in your browser: https://peerless9.github.io/acquaint/**. No install or account needed. It's best on a phone; on desktop it shows in a phone-width frame. Every push to `main` redeploys it automatically (see `.github/workflows/deploy-web.yml`).
+
 This is a hackathon prototype built with Expo (React Native), TypeScript and Expo Router. It uses local mock data and in-memory state only: no backend, no auth.
 
 ## Run it
@@ -14,6 +16,10 @@ npx expo start
 ```
 
 Scan the QR code with the iPhone Camera app (or the Expo Go app on Android). To use the iOS Simulator instead, press `i` in the terminal.
+
+**"You need to be signed in" on iPhone:** Expo Go on a physical iPhone only opens a dev server when Expo Go and the Expo CLI are signed in to the same Expo account. Create a free account at [expo.dev/signup](https://expo.dev/signup), run `npx expo login` on your computer, sign in to the same account in Expo Go (account icon, top right), then restart `npx expo start`. Android and the iOS Simulator don't need this. To share the app with people who don't have an account, send them the web link above.
+
+On web, "Add to calendar" downloads an `.ics` file instead of opening the system calendar sheet.
 
 Other scripts:
 
