@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
+import { isFormConnected, submitToForm } from './formSubmit';
 import { OTHER, type Importance, type Question } from './questions';
 
 export type Answer = string | string[] | number;
@@ -23,7 +24,12 @@ type AppState = {
   setChosenStart: (iso: string | null) => void;
   calendarAdded: boolean;
   setCalendarAdded: (added: boolean) => void;
+  /** Sending the finished quiz to the Google Form. */
+  formStatus: FormStatus;
+  submitAnswers: () => Promise<void>;
 };
+
+export type FormStatus = 'idle' | 'sending' | 'sent' | 'failed';
 
 const AppStateContext = createContext<AppState | null>(null);
 
@@ -35,6 +41,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [calendarAdded, setCalendarAdded] = useState(false);
   const [chosenStart, setChosenStartState] = useState<string | null>(null);
+  const [formStatus, setFormStatus] = useState<FormStatus>('idle');
 
   const value = useMemo<AppState>(
     () => ({
@@ -59,8 +66,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       },
       calendarAdded,
       setCalendarAdded,
+      formStatus,
+      submitAnswers: async () => {
+        if (!isFormConnected()) return;
+        setFormStatus('sending');
+        const ok = await submitToForm({ contact: account?.contact, answers, otherText, importance });
+        setFormStatus(ok ? 'sent' : 'failed');
+      },
     }),
-    [account, answers, otherText, importance, selectedMatchId, chosenStart, calendarAdded],
+    [account, answers, otherText, importance, selectedMatchId, chosenStart, calendarAdded, formStatus],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

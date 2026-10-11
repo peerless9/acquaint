@@ -31,7 +31,7 @@ function chunk<T>(items: T[], size: number) {
 
 export default function QuizScreen() {
   const [index, setIndex] = useState(0);
-  const { answers, otherText, setAnswer, setOtherText, importance, setImportance } = useAppState();
+  const { answers, otherText, setAnswer, setOtherText, importance, setImportance, submitAnswers } = useAppState();
 
   const q = questions[index];
   const answer = answers[q.id];
@@ -52,7 +52,10 @@ export default function QuizScreen() {
 
   const next = () => {
     if (!complete) return;
-    if (isLast) router.push('/picks');
+    if (isLast) {
+      submitAnswers();
+      router.push('/picks');
+    }
     else setIndex(index + 1);
   };
 
