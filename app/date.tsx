@@ -131,7 +131,7 @@ export default function DateScreen() {
             icon={<MapPin {...ICON} />}
             label="Where"
             value={plan.venue.name}
-            detail={`${plan.venue.address}, ${plan.venue.area}`}
+            detail={`${plan.venue.address}, ${plan.venue.area}${plan.travelMin ? ` · about ${plan.travelMin} min from you` : ''}`}
           />
           <DetailRow icon={<ActivityIcon {...ICON} />} label="Plan" value={plan.venue.plan} last />
         </Animated.View>
