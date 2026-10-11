@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { colors, fonts, radii, timing } from '../theme';
@@ -10,9 +10,13 @@ type Props = {
   accessibilityLabel: string;
   placeholder?: string;
   multiline?: boolean;
-  keyboardType?: 'default' | 'number-pad';
+  keyboardType?: TextInputProps['keyboardType'];
   autoFocus?: boolean;
   onSubmitEditing?: () => void;
+  /** Extra TextInput props, e.g. secureTextEntry or autoComplete for account fields. */
+  inputProps?: Omit<TextInputProps, 'value' | 'onChangeText' | 'style'>;
+  /** Element on the right edge of the field, such as a show-password button. */
+  accessory?: ReactNode;
 };
 
 export function TextAnswer({
@@ -24,6 +28,8 @@ export function TextAnswer({
   keyboardType = 'default',
   autoFocus,
   onSubmitEditing,
+  inputProps,
+  accessory,
 }: Props) {
   const [focused, setFocused] = useState(false);
   const focus = useSharedValue(0);
@@ -47,20 +53,30 @@ export function TextAnswer({
         autoFocus={autoFocus}
         returnKeyType={multiline ? 'default' : 'done'}
         onSubmitEditing={onSubmitEditing}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
         accessibilityLabel={accessibilityLabel}
         selectionColor={colors.accent}
         cursorColor={colors.accent}
         textAlignVertical={multiline ? 'top' : 'center'}
+        {...inputProps}
+        onFocus={(e) => {
+          setFocused(true);
+          inputProps?.onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          inputProps?.onBlur?.(e);
+        }}
         style={[styles.input, multiline && styles.multiline]}
       />
+      {accessory}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: radii.option,
     borderWidth: 1,
     borderColor: colors.border,
@@ -68,6 +84,7 @@ const styles = StyleSheet.create({
   },
   ring: { margin: -1, borderRadius: radii.option, borderWidth: 2, borderColor: colors.accent },
   input: {
+    flex: 1,
     minHeight: 58,
     paddingHorizontal: 18,
     paddingVertical: 16,
