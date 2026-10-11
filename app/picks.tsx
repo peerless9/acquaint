@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,7 +10,7 @@ import { useMatches } from '../data/useMatches';
 import { colors, fonts, sizes } from '../theme';
 
 export default function PicksScreen() {
-  const { selectedMatchId, setSelectedMatchId } = useAppState();
+  const { selectedMatchId, setSelectedMatchId, formStatus, submitAnswers } = useAppState();
   const matches = useMatches();
   const hasPick = matches.some((m) => m.candidate.id === selectedMatchId);
 
@@ -52,7 +52,19 @@ export default function PicksScreen() {
         ) : (
           <PrimaryButton label="Edit my answers" onPress={() => router.replace('/quiz')} />
         )}
-        <Text style={styles.note}>New matches every Monday</Text>
+        {formStatus === 'failed' ? (
+          <Pressable onPress={submitAnswers} accessibilityRole="button" hitSlop={8} style={styles.retry}>
+            <Text style={[styles.note, styles.retryText]}>Couldn’t send your answers. Tap to retry.</Text>
+          </Pressable>
+        ) : (
+          <Text style={styles.note} accessibilityLiveRegion="polite">
+            {formStatus === 'sending'
+              ? 'Sending your answers…'
+              : formStatus === 'sent'
+                ? 'Answers sent · New matches every Monday'
+                : 'New matches every Monday'}
+          </Text>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -73,4 +85,6 @@ const styles = StyleSheet.create({
   cards: { flex: 1, paddingHorizontal: sizes.gutter, paddingVertical: 6, gap: 14 },
   footer: { alignItems: 'center', gap: 12, paddingHorizontal: sizes.gutter, paddingTop: 20, paddingBottom: 12 },
   note: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
+  retry: { minHeight: sizes.minTap, justifyContent: 'center' },
+  retryText: { color: colors.error },
 });
