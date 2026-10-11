@@ -7,13 +7,14 @@ import { ChevronLeft } from 'lucide-react-native';
 
 import { Chip } from '../components/Chip';
 import { IconButton } from '../components/IconButton';
+import { ImportancePicker } from '../components/ImportancePicker';
 import { OptionCard } from '../components/OptionCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ProgressBar } from '../components/ProgressBar';
 import { ScaleAnswer } from '../components/ScaleAnswer';
 import { TextAnswer } from '../components/TextAnswer';
 import { Wordmark } from '../components/Wordmark';
-import { OTHER, questions, type Question } from '../data/questions';
+import { needsImportance, OTHER, questions, type Question } from '../data/questions';
 import { isAnswered, useAppState } from '../data/store';
 import { colors, fonts, sizes } from '../theme';
 
@@ -28,16 +29,18 @@ function chunk<T>(items: T[], size: number) {
 
 export default function QuizScreen() {
   const [index, setIndex] = useState(0);
-  const { answers, otherText, setAnswer, setOtherText } = useAppState();
+  const { answers, otherText, setAnswer, setOtherText, importance, setImportance } = useAppState();
 
   const q = questions[index];
   const answer = answers[q.id];
   const other = otherText[q.id] ?? '';
   const answered = isAnswered(q, answer, other);
+  const asksImportance = answered && needsImportance(q, answer);
+  const complete = answered && (!asksImportance || importance[q.id] !== undefined);
   const isLast = index === questions.length - 1;
 
   const next = () => {
-    if (!answered) return;
+    if (!complete) return;
     if (isLast) router.push('/picks');
     else setIndex(index + 1);
   };
@@ -78,6 +81,10 @@ export default function QuizScreen() {
               onOther={(v) => setOtherText(q.id, v)}
               onSubmit={next}
             />
+
+            {asksImportance && (
+              <ImportancePicker value={importance[q.id]} onChange={(v) => setImportance(q.id, v)} />
+            )}
           </Animated.View>
         </ScrollView>
 
@@ -88,7 +95,7 @@ export default function QuizScreen() {
             disabled={index === 0}
             onPress={() => setIndex(Math.max(0, index - 1))}
           />
-          <PrimaryButton label={isLast ? 'See my matches' : 'Next'} disabled={!answered} onPress={next} />
+          <PrimaryButton label={isLast ? 'See my matches' : 'Next'} disabled={!complete} onPress={next} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -141,8 +148,12 @@ function AnswerInput({ q, answer, other, onAnswer, onOther, onSubmit }: AnswerIn
 
     case 'multi': {
       const selected = Array.isArray(answer) ? answer : [];
-      const toggle = (opt: string) =>
-        onAnswer(selected.includes(opt) ? selected.filter((o) => o !== opt) : [...selected, opt]);
+      const toggle = (opt: string) => {
+        if (selected.includes(opt)) return onAnswer(selected.filter((o) => o !== opt));
+        // An exclusive option ("None of these") can't be combined with the others.
+        if (opt === q.exclusive) return onAnswer([opt]);
+        onAnswer([...selected.filter((o) => o !== q.exclusive), opt]);
+      };
 
       if (q.options.length > GRID_THRESHOLD) {
         const columns = q.options.length > 12 ? 3 : 2;
