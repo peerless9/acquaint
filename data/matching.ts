@@ -5,13 +5,14 @@ import { candidates, type Candidate, type Gender } from './candidates';
 import {
   AREAS,
   BUDGETS,
+  DEFAULT_TRAVEL_MINUTES,
   DURATION_MIN,
-  FAR_AWAY_MILES,
   NEEDS,
   SLOTS,
   SUITS,
+  TRAVEL_OPTIONS,
   VENUES,
-  distance,
+  travelMinutes,
   type Area,
   type DateType,
   type Need,
@@ -19,7 +20,7 @@ import {
   type SlotLabel,
   type Venue,
 } from './places';
-import type { Importance } from './questions';
+import type { DealBreaker, Importance } from './questions';
 import type { Answer } from './store';
 
 export type MatchInput = {
@@ -33,6 +34,8 @@ export type DatePlan = {
   slot: Slot;
   activity: DateType;
   venue: Venue;
+  /** Your estimated travel time to the venue, if we know where you are. */
+  travelMin?: number;
 };
 
 export type MatchResult = {
@@ -84,6 +87,49 @@ const budgetLevel = (v: string | undefined) => {
 
 // ---- filtering --------------------------------------------------------------
 
+function myTravelLimit(answers: MatchInput['answers']) {
+  const label = str(answers.travel);
+  return TRAVEL_OPTIONS.find((t) => t.label === label)?.minutes ?? DEFAULT_TRAVEL_MINUTES;
+}
+
+/** Can both people reach this venue within the travel time they set? */
+function reachable(v: Venue, c: Candidate, answers: MatchInput['answers']) {
+  const myArea = str(answers.area);
+  const mine = isArea(myArea) ? travelMinutes(myArea, v.area) <= myTravelLimit(answers) : true;
+  return mine && travelMinutes(c.area, v.area) <= c.maxTravelMin;
+}
+
+/** Whether a deal-breaker applies to the candidate (your list). */
+function candidateHas(b: DealBreaker, c: Candidate, answers: MatchInput['answers']) {
+  const myArea = str(answers.area);
+  switch (b) {
+    case 'Smokes': return c.smokes;
+    case 'Drinks heavily': return c.drinksHeavily;
+    case 'Uses drugs': return c.usesDrugs;
+    case 'Has kids': return c.hasKids;
+    case 'Wants kids': return c.wantsKids === true;
+    case "Doesn't want kids": return c.wantsKids === false;
+    case 'Has pets': return c.hasPets;
+    case 'Lives far away': return isArea(myArea) && travelMinutes(myArea, c.area) > myTravelLimit(answers);
+  }
+}
+
+/** Whether a deal-breaker applies to you (their list), from the "about you" answers. Unknown never counts. */
+function youHave(b: DealBreaker, c: Candidate, answers: MatchInput['answers']) {
+  const a = (id: string) => str(answers[id]);
+  const myArea = a('area');
+  switch (b) {
+    case 'Smokes': return a('smoking') === 'Yes' || a('smoking') === 'Sometimes';
+    case 'Drinks heavily': return a('drinking') === 'Often';
+    case 'Uses drugs': return a('drugs') === 'Sometimes' || a('drugs') === 'Often';
+    case 'Has kids': return a('hasKids') === 'Yes';
+    case 'Wants kids': return a('wantsKids') === 'Yes';
+    case "Doesn't want kids": return a('wantsKids') === 'No';
+    case 'Has pets': return a('pets') === 'Yes';
+    case 'Lives far away': return isArea(myArea) && travelMinutes(c.area, myArea) > c.maxTravelMin;
+  }
+}
+
 function passesFilters(c: Candidate, input: MatchInput) {
   const { answers } = input;
 
@@ -94,24 +140,15 @@ function passesFilters(c: Candidate, input: MatchInput) {
   if ((myGender === 'Male' || myGender === 'Female') && !c.seeks.includes(myGender)) return false;
   if (myGender && myGender !== 'Male' && myGender !== 'Female' && c.seeks.length < 2) return false;
 
-  // Non-negotiables are hard filters.
-  const breakers = list(answers.dealBreakers);
-  const myArea = str(answers.area);
-  const checks: Record<string, boolean> = {
-    Smokes: c.smokes,
-    'Drinks heavily': c.drinksHeavily,
-    'Uses drugs': c.usesDrugs,
-    'Has kids': c.hasKids,
-    'Wants kids': c.wantsKids === true,
-    "Doesn't want kids": c.wantsKids === false,
-    'Has pets': c.hasPets,
-    'Lives far away': isArea(myArea) && distance(myArea, c.area) > FAR_AWAY_MILES,
-  };
-  if (breakers.some((b) => checks[b])) return false;
+  // Non-negotiables are hard filters, in both directions.
+  const mine = list(answers.dealBreakers) as DealBreaker[];
+  if (mine.some((b) => candidateHas(b, c, answers))) return false;
+  if (c.dealBreakers.some((b) => youHave(b, c, answers))) return false;
 
-  // A date needs at least one time you're both free.
-  const mine = list(answers.availability);
-  if (mine.length && !c.availability.some((s) => mine.includes(s))) return false;
+  // A date needs a time you're both free and a place you can both get to.
+  const free = list(answers.availability);
+  if (free.length && !c.availability.some((s) => free.includes(s))) return false;
+  if (!VENUES.some((v) => reachable(v, c, answers))) return false;
 
   return true;
 }
@@ -190,8 +227,8 @@ function scoreParts(c: Candidate, input: MatchInput): Part[] {
 
   const area = str(answers.area);
   if (isArea(area)) {
-    const d = distance(area, c.area);
-    parts.push({ value: Math.max(0, 1 - d / 6), weight: 1, reason: d < 1.5 ? 'Lives nearby' : undefined });
+    const mins = travelMinutes(area, c.area);
+    parts.push({ value: Math.max(0, 1 - mins / 40), weight: 1, reason: mins <= 15 ? 'Lives nearby' : undefined });
   }
 
   return parts;
@@ -246,24 +283,41 @@ export function planDate(c: Candidate, input: MatchInput, time: { slot: Slot; st
   const suitable = SUITS[time.slot.part].filter((t) => !(t === 'Drinks' && needs.has('Alcohol-free')));
 
   // Prefer something you both like, then something you like, then something they like.
-  const activity =
-    suitable.find((t) => myTypes.includes(t) && c.dateTypes.includes(t)) ??
-    suitable.find((t) => myTypes.includes(t)) ??
-    suitable.find((t) => c.dateTypes.includes(t)) ??
-    suitable[0];
+  const rank = (t: DateType) => (myTypes.includes(t) ? 0 : 2) + (c.dateTypes.includes(t) ? 0 : 1);
+  const activities = [...suitable].sort((a, b) => rank(a) - rank(b));
 
   const myArea = str(answers.area);
   const budget = Math.min(budgetLevel(str(answers.budget)) ?? 3, c.budget);
   const fits = (v: Venue) => [...needs].every((n) => v.serves.includes(n));
-  const travel = (v: Venue) => (isArea(myArea) ? distance(myArea, v.area) : 0) + distance(c.area, v.area);
+  const reach = (v: Venue) => reachable(v, c, answers);
+  const travel = (v: Venue) => (isArea(myArea) ? travelMinutes(myArea, v.area) : 0) + travelMinutes(c.area, v.area);
+  const nearest = (vs: Venue[]) => [...vs].sort((a, b) => travel(a) - travel(b))[0];
 
-  const ofType = VENUES.filter((v) => v.type === activity);
-  const pool =
-    [ofType.filter((v) => fits(v) && v.budget <= budget), ofType.filter(fits), ofType].find((p) => p.length) ?? VENUES;
-  const venue = [...pool].sort((a, b) => travel(a) - travel(b))[0];
+  // Take the best-ranked activity that has a venue you can both reach, relaxing budget and needs last.
+  let pick: { activity: DateType; venue: Venue } | undefined;
+  for (const strict of [true, false]) {
+    for (const activity of activities) {
+      const options = VENUES.filter((v) => v.type === activity && reach(v) && (!strict || (fits(v) && v.budget <= budget)));
+      if (options.length) {
+        pick = { activity, venue: nearest(options) };
+        break;
+      }
+    }
+    if (pick) break;
+  }
+  if (!pick) {
+    const venue = nearest(VENUES.filter(reach).length ? VENUES.filter(reach) : VENUES);
+    pick = { activity: venue.type, venue };
+  }
 
-  const end = new Date(time.start.getTime() + DURATION_MIN[activity] * 60_000);
-  return { start: time.start, end, slot: time.slot, activity, venue };
+  const end = new Date(time.start.getTime() + DURATION_MIN[pick.activity] * 60_000);
+  return {
+    start: time.start,
+    end,
+    slot: time.slot,
+    ...pick,
+    travelMin: isArea(myArea) ? travelMinutes(myArea, pick.venue.area) : undefined,
+  };
 }
 
 // ---- public ------------------------------------------------------------------
