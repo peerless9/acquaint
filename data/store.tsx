@@ -18,6 +18,9 @@ type AppState = {
   setImportance: (id: string, value: Importance) => void;
   selectedMatchId: string | null;
   setSelectedMatchId: (id: string | null) => void;
+  /** ISO start of a rescheduled date; null means the soonest shared time. */
+  chosenStart: string | null;
+  setChosenStart: (iso: string | null) => void;
   calendarAdded: boolean;
   setCalendarAdded: (added: boolean) => void;
 };
@@ -31,6 +34,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [importance, setImportances] = useState<Record<string, Importance>>({});
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [calendarAdded, setCalendarAdded] = useState(false);
+  const [chosenStart, setChosenStartState] = useState<string | null>(null);
 
   const value = useMemo<AppState>(
     () => ({
@@ -45,12 +49,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       selectedMatchId,
       setSelectedMatchId: (id) => {
         setSelectedMatchId(id);
+        setChosenStartState(null);
+        setCalendarAdded(false);
+      },
+      chosenStart,
+      setChosenStart: (iso) => {
+        setChosenStartState(iso);
         setCalendarAdded(false);
       },
       calendarAdded,
       setCalendarAdded,
     }),
-    [account, answers, otherText, importance, selectedMatchId, calendarAdded],
+    [account, answers, otherText, importance, selectedMatchId, chosenStart, calendarAdded],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
