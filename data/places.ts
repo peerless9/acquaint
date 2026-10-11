@@ -3,23 +3,51 @@
 export const AREAS = ['Mission', 'SoMa', 'Marina', 'Richmond', 'Sunset', 'Noe Valley'] as const;
 export type Area = (typeof AREAS)[number];
 
-// Rough positions in miles, used for "Lives far away" and for picking a venue between two people.
-const AREA_POS: Record<Area, [number, number]> = {
-  Mission: [0, 0],
-  SoMa: [0.8, 1.6],
-  Marina: [-1.2, 4],
-  Richmond: [-4, 2.5],
-  Sunset: [-4.5, 0],
-  'Noe Valley': [-1, -0.6],
+// Neighborhood centers (lat, lng), used for distance, travel time and "Use my current location".
+const AREA_COORDS: Record<Area, [number, number]> = {
+  Mission: [37.7599, -122.4148],
+  SoMa: [37.7785, -122.4056],
+  Marina: [37.8037, -122.4368],
+  Richmond: [37.7802, -122.4824],
+  Sunset: [37.7533, -122.4945],
+  'Noe Valley': [37.7502, -122.4337],
 };
 
-export const FAR_AWAY_MILES = 3.5;
+/** Great-circle distance in miles. */
+export function milesBetween([lat1, lng1]: [number, number], [lat2, lng2]: [number, number]) {
+  const rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad;
+  const dLng = (lng2 - lng1) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
+  return 3958.8 * 2 * Math.asin(Math.sqrt(h));
+}
 
 export function distance(a: Area, b: Area) {
-  const [ax, ay] = AREA_POS[a];
-  const [bx, by] = AREA_POS[b];
-  return Math.hypot(ax - bx, ay - by);
+  return milesBetween(AREA_COORDS[a], AREA_COORDS[b]);
 }
+
+/** Rough door-to-door estimate by transit or car across the city. */
+export function travelMinutes(a: Area, b: Area) {
+  return Math.round(8 + 3.5 * distance(a, b));
+}
+
+/** The neighborhood closest to a point, and how far away it is. */
+export function nearestArea(point: [number, number]) {
+  return AREAS.map((area) => ({ area, miles: milesBetween(point, AREA_COORDS[area]) })).sort((x, y) => x.miles - y.miles)[0];
+}
+
+/** Beyond this you're outside the city acquaint currently serves. */
+export const SERVICE_RADIUS_MILES = 15;
+
+export const TRAVEL_OPTIONS = [
+  { label: 'Up to 15 minutes', minutes: 15 },
+  { label: 'Up to 20 minutes', minutes: 20 },
+  { label: 'Up to 30 minutes', minutes: 30 },
+  { label: 'Any distance', minutes: Infinity },
+] as const;
+
+/** Used when someone hasn't said how far they'll travel. */
+export const DEFAULT_TRAVEL_MINUTES = 30;
 
 export const DATE_TYPES = [
   'Coffee',
