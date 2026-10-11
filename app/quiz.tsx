@@ -6,8 +6,10 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { ChevronLeft } from 'lucide-react-native';
 
 import { Chip } from '../components/Chip';
+import { GroupAnswer } from '../components/GroupAnswer';
 import { IconButton } from '../components/IconButton';
 import { ImportancePicker } from '../components/ImportancePicker';
+import { LocationAnswer } from '../components/LocationAnswer';
 import { OptionCard } from '../components/OptionCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ProgressBar } from '../components/ProgressBar';
@@ -15,7 +17,7 @@ import { ScaleAnswer } from '../components/ScaleAnswer';
 import { TextAnswer } from '../components/TextAnswer';
 import { Wordmark } from '../components/Wordmark';
 import { needsImportance, OTHER, questions, type Question } from '../data/questions';
-import { isAnswered, useAppState } from '../data/store';
+import { isAnswered, useAppState, type Answer } from '../data/store';
 import { colors, fonts, sizes } from '../theme';
 
 // Long multi-select lists (e.g. heights) render as a compact grid instead of full-width cards.
@@ -34,7 +36,7 @@ export default function QuizScreen() {
   const q = questions[index];
   const answer = answers[q.id];
   const other = otherText[q.id] ?? '';
-  const answered = isAnswered(q, answer, other);
+  const answered = isAnswered(q, answers, otherText);
   const asksImportance = answered && needsImportance(q, answer);
   const complete = answered && (!asksImportance || importance[q.id] !== undefined);
 
@@ -80,7 +82,7 @@ export default function QuizScreen() {
               <Text style={styles.heading} accessibilityRole="header">
                 {q.prompt}
               </Text>
-              {q.kind === 'multi' && q.hint ? <Text style={styles.hint}>{q.hint}</Text> : null}
+              {'hint' in q && q.hint ? <Text style={styles.hint}>{q.hint}</Text> : null}
             </View>
 
             <AnswerInput
@@ -90,6 +92,8 @@ export default function QuizScreen() {
               onAnswer={(v) => setAnswer(q.id, v)}
               onOther={(v) => setOtherText(q.id, v)}
               onSubmit={next}
+              answers={answers}
+              onAnswerFor={setAnswer}
             />
 
             {asksImportance && (
@@ -119,10 +123,19 @@ type AnswerInputProps = {
   onAnswer: (v: string | string[] | number) => void;
   onOther: (v: string) => void;
   onSubmit: () => void;
+  /** For group questions, whose items are stored under their own ids. */
+  answers: Record<string, Answer>;
+  onAnswerFor: (id: string, v: Answer) => void;
 };
 
-function AnswerInput({ q, answer, other, onAnswer, onOther, onSubmit }: AnswerInputProps) {
+function AnswerInput({ q, answer, other, onAnswer, onOther, onSubmit, answers, onAnswerFor }: AnswerInputProps) {
   switch (q.kind) {
+    case 'location':
+      return <LocationAnswer options={q.options} value={typeof answer === 'string' ? answer : undefined} onChange={onAnswer} />;
+
+    case 'group':
+      return <GroupAnswer items={q.items} values={answers} onChange={onAnswerFor} />;
+
     case 'text':
       return (
         <TextAnswer
