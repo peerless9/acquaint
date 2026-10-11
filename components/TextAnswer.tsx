@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { colors, fonts, radii, timing } from '../theme';
@@ -66,12 +66,15 @@ export function TextAnswer({
           setFocused(false);
           inputProps?.onBlur?.(e);
         }}
-        style={[styles.input, multiline && styles.multiline]}
+        style={[styles.input, multiline && styles.multiline, Platform.OS === 'web' && webNoOutline]}
       />
       {accessory}
     </View>
   );
 }
+
+// The animated ring is the focus indicator, so drop the browser's default outline on web.
+const webNoOutline = { outlineStyle: 'none' } as object;
 
 const styles = StyleSheet.create({
   wrap: {
