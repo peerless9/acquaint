@@ -5,44 +5,53 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PhotoCard } from '../components/PhotoCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Wordmark } from '../components/Wordmark';
-import { matches } from '../data/matches';
 import { useAppState } from '../data/store';
+import { useMatches } from '../data/useMatches';
 import { colors, fonts, sizes } from '../theme';
 
 export default function PicksScreen() {
   const { selectedMatchId, setSelectedMatchId } = useAppState();
-  const hasPick = selectedMatchId !== null;
+  const matches = useMatches();
+  const hasPick = matches.some((m) => m.candidate.id === selectedMatchId);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Wordmark />
         <Text style={styles.heading} accessibilityRole="header">
-          Your 3 this week
+          {matches.length ? `Your ${matches.length} this week` : 'No matches this week'}
         </Text>
-        <Text style={styles.sub}>Pick one. We’ll plan the date — no chatting needed.</Text>
+        <Text style={styles.sub}>
+          {matches.length
+            ? 'Pick one. We’ll plan the date — no chatting needed.'
+            : 'Nobody fits all of your non-negotiables and free times yet. Try loosening a deal-breaker or adding times you’re free.'}
+        </Text>
       </View>
 
       <View style={styles.cards} accessibilityRole="radiogroup">
         {matches.map((m, i) => (
           <PhotoCard
-            key={m.id}
-            photo={m.photo}
-            tint={m.tint}
-            selected={selectedMatchId === m.id}
-            dimmed={hasPick && selectedMatchId !== m.id}
-            onPress={() => setSelectedMatchId(selectedMatchId === m.id ? null : m.id)}
+            key={m.candidate.id}
+            photo={m.candidate.photo}
+            tint={colors.photoTints[i % colors.photoTints.length]}
+            selected={selectedMatchId === m.candidate.id}
+            dimmed={hasPick && selectedMatchId !== m.candidate.id}
+            onPress={() => setSelectedMatchId(selectedMatchId === m.candidate.id ? null : m.candidate.id)}
             accessibilityLabel={`Match ${i + 1} of ${matches.length}, profile photo`}
           />
         ))}
       </View>
 
       <View style={styles.footer}>
-        <PrimaryButton
-          label={hasPick ? 'Plan our date' : 'Choose one to continue'}
-          disabled={!hasPick}
-          onPress={() => router.push('/date')}
-        />
+        {matches.length ? (
+          <PrimaryButton
+            label={hasPick ? 'Plan our date' : 'Choose one to continue'}
+            disabled={!hasPick}
+            onPress={() => router.push('/date')}
+          />
+        ) : (
+          <PrimaryButton label="Edit my answers" onPress={() => router.replace('/quiz')} />
+        )}
         <Text style={styles.note}>New matches every Monday</Text>
       </View>
     </SafeAreaView>
