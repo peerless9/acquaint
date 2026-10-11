@@ -2,7 +2,9 @@
 // Edit freely: each question renders based on its `kind`.
 // `importance: true` asks "How important is this?" after the answer; skip it for answers in `importanceSkip`.
 
-export type Section = 'Preferences' | 'Compatibility' | 'Non-negotiables';
+import { AREAS, BUDGETS, DATE_TYPES, NEEDS, SLOTS } from './places';
+
+export type Section = 'Preferences' | 'Compatibility' | 'Non-negotiables' | 'Dates';
 
 type Base = {
   id: string;
@@ -93,9 +95,31 @@ export const questions: Question[] = [
     hint: "We'll never match you with someone who has these",
     options: [
       'Smokes', 'Drinks heavily', 'Uses drugs', 'Has kids', 'Wants kids', "Doesn't want kids",
-      'Different religion', 'Different politics', 'Lives far away', 'Has pets', 'None of these',
+      'Lives far away', 'Has pets', 'None of these',
     ],
     exclusive: 'None of these',
   },
   { id: 'nonNegotiables', section: 'Non-negotiables', kind: 'text', multiline: true, prompt: 'Are there any non-negotiables you wish to identify?', placeholder: 'Anything else we should never match you with. Write "none" if not.' },
+
+  // Dates: what the planner needs to book a first date you'll both enjoy
+  { id: 'area', section: 'Dates', kind: 'single', prompt: 'Which part of San Francisco are you in?', options: [...AREAS] },
+  { id: 'dateTypes', section: 'Dates', kind: 'multi', prompt: 'What kinds of dates do you enjoy?', hint: 'Check all that apply', options: [...DATE_TYPES] },
+  {
+    id: 'availability',
+    section: 'Dates',
+    kind: 'multi',
+    prompt: 'When are you usually free for a date?',
+    hint: "Pick every time that works. We only book times you're both free.",
+    options: SLOTS.map((s) => s.label),
+  },
+  { id: 'budget', section: 'Dates', kind: 'single', prompt: "What's your budget for a first date?", options: [...BUDGETS] },
+  {
+    id: 'needs',
+    section: 'Dates',
+    kind: 'multi',
+    prompt: 'Anything we should plan around?',
+    hint: 'Check all that apply',
+    options: [...NEEDS, 'Nothing specific'],
+    exclusive: 'Nothing specific',
+  },
 ];
