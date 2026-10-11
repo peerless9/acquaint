@@ -44,7 +44,7 @@ export const questions: Question[] = [
   { id: 'age', section: 'Preferences', kind: 'text', prompt: 'What is your age?', keyboard: 'number-pad', placeholder: 'e.g. 27' },
   { id: 'ageRange', section: 'Preferences', kind: 'text', prompt: 'What age range are you looking to meet?', placeholder: 'e.g. 24–32' },
   { id: 'height', section: 'Preferences', kind: 'text', prompt: 'What is your height?', placeholder: "e.g. 5'9" },
-  { id: 'idealHeight', section: 'Preferences', kind: 'multi', prompt: 'What is your ideal height in a partner?', hint: 'Choose all that apply', options: heights },
+  { id: 'idealHeight', section: 'Preferences', kind: 'multi', prompt: 'What is your ideal height in a partner?', hint: 'Check all that apply', options: heights },
   { id: 'career', section: 'Preferences', kind: 'single', prompt: 'What career stage are you in?', options: careerStages, allowOther: true },
   {
     id: 'partnerCareer',
