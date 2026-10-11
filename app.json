@@ -39,7 +39,13 @@
           "backgroundColor": "#FAF8FF"
         }
       ],
-      "expo-image"
+      "expo-image",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "acquaint uses your location once to find the neighborhood you date in. It is never shared."
+        }
+      ]
     ],
     "scheme": "acquaint",
     "experiments": {
