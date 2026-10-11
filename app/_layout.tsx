@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -34,14 +35,30 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AppStateProvider>
         <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.background },
-            animation: 'fade',
-          }}
-        />
+        {/* On web, keep the app phone-width and centered so it previews like the mobile app. */}
+        <View style={styles.page}>
+          <View style={styles.frame}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.background },
+                animation: 'fade',
+              }}
+            />
+          </View>
+        </View>
       </AppStateProvider>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  page: { flex: 1, backgroundColor: Platform.OS === 'web' ? colors.chip : colors.background, alignItems: 'center' },
+  frame: {
+    flex: 1,
+    width: '100%',
+    maxWidth: Platform.OS === 'web' ? 430 : undefined,
+    backgroundColor: colors.background,
+    overflow: 'hidden',
+  },
+});
